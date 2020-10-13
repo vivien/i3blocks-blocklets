@@ -387,7 +387,7 @@ def setParsedArgs(args):
 
 
 parseArguments()
-leaves = getLeafDevicePaths()
+leaves = sorted(getLeafDevicePaths())
 leaves = [path for path in leaves if not fastIgnore(path)]
 attributeMaps = getAttributeMaps(leaves)
 leaves = (path for path in leaves if not ignore(path, attributeMaps[path]))
@@ -396,3 +396,4 @@ output = SEPARATOR.join(outputs)
 if output:
     output = "<span color='{}'>{}</span>".format(INFO_TEXT_COLOR, output)
 print(output)
+
