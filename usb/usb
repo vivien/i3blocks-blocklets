@@ -108,8 +108,10 @@ def getLeafDevicePaths():
 
 
 def getKernelName(path):
-    return check_output(['lsblk', '-lndo', 'KNAME', path],
-            universal_newlines=True).rstrip("\n")
+    # return check_output(['lsblk', '-lndo', 'KNAME', path],
+    #        universal_newlines=True).rstrip("\n")
+    return check_output(['lsblk', '-ndso', 'KNAME', path],
+            universal_newlines=True).rstrip("\n").split("\n")[-1]
 
 
 def getDeviceType(path):
