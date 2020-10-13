@@ -103,7 +103,7 @@ def getLeafDevicePaths():
     lines = lines.split("\n")
     lines = filter(lambda s: s[:4]=='/dev', lines)
     lines = map(lambda s: s.split(' ')[0], lines)
-    lines = filter(None, lines)
+    lines = list(set(filter(None, lines)))
     return lines
 
 
@@ -395,5 +395,4 @@ outputs = filter(None, map(getOutput, leaves))
 output = SEPARATOR.join(outputs)
 if output:
     output = "<span color='{}'>{}</span>".format(INFO_TEXT_COLOR, output)
-print(output)
 print(output)
