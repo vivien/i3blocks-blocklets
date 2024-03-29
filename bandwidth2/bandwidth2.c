@@ -6,8 +6,8 @@
 #include <unistd.h>
 #include <getopt.h>
 
-#define RED "#FF7373"
-#define ORANGE "#FFA500"
+char RED[] = "#FF7373";
+char ORANGE[] = "#FFA500";
 
 typedef unsigned long long int ulli;
 
@@ -82,11 +82,14 @@ void display(int const unit, int const divisor,
              double b, int const warning, int const critical)
 {
   char fmtstr[7];
+  char* envvar;
 
   if (critical != 0 && b > critical) {
-    printf("<span fallback='true' color='%s'>", RED);
+    envvar = getenv("RED");
+    printf("<span fallback='true' color='%s'>", envvar ? envvar : RED);
   } else if (warning != 0 && b > warning) {
-    printf("<span fallback='true' color='%s'>", ORANGE);
+    envvar = getenv("ORANGE");
+    printf("<span fallback='true' color='%s'>", envvar ? envvar : ORANGE);
   } else {
     printf("<span fallback='true'>");
   }
