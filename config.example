@@ -24,8 +24,9 @@
 #
 # The top properties below are applied to every block, but can be overridden.
 # Each block command defaults to the script name to avoid boilerplate.
-# Change $SCRIPT_DIR to the location of your scripts!
-command=$SCRIPT_DIR/$BLOCK_NAME
+# Change $SCRIPT_DIR to the location of your scripts! (see https://github.com/vivien/i3blocks-contrib/wiki/FAQ#blocklets-refer-to-script_dir-what-does-that-mean-how-can-i-use-it)
+# actuall command will include name of block as directory and than same name as script name
+command=$SCRIPT_DIR/$BLOCK_NAME/$BLOCK_NAME
 separator_block_width=15
 markup=none
 
