@@ -1,0 +1,4 @@
+#!/bin/sh
+
+nbfc status | awk -F: \
+    '$1 ~ /Temperature */ { gsub(/ /,"",$2); printf "%s°C\n%s°C\n", $2, $2 }'
