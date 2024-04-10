@@ -18,6 +18,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import pyalpm
+import re
+import fnmatch
 import json
 import os
 import requests
@@ -88,7 +90,7 @@ for pkg in packages.split('\n'):
 
 updates = []
 for pkg in installed_version.keys():
-    if pkg in args.ignore:
+    if any(re.match(fnmatch.translate(p), pkg) for p in args.ignore):
         continue
     v_aur = version_in_aur(pkg)
     v_inst = installed_version[pkg]
