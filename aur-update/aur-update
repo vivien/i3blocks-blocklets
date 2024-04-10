@@ -17,6 +17,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import pyalpm
+import re
+import fnmatch
 import json
 import os
 import requests
@@ -57,26 +60,6 @@ def version_in_aur(pkg):
 
     return "NotFound"
 
-
-def vcs_version(pkg, ver):
-    """ Try to find a sensible version for VSC packages
-
-    If pkg looks like a VCS package according to
-       https://wiki.archlinux.org/index.php/VCS_package_guidelines
-    try to extract a sensible (= comparable) version number.
-    """
-
-    suffices = ['-cvs', '-svn', '-hg', '-darcs', '-bzr', '-git']
-    if not any(pkg.endswith(suffix) for suffix in suffices):
-        # does not look like a VCS package
-        return ver
-
-    if '.r' in ver:
-        # of the form RELEASE.rREVISION: only use the release
-        return ver.split('.r')[0]
-    # no base release to compare, just return None
-    return None
-
 if args.force_ipv4:
     # This is useful, because the AUR API often gets timeouts with
     # IPV6 and the call does not return.
@@ -107,11 +90,11 @@ for pkg in packages.split('\n'):
 
 updates = []
 for pkg in installed_version.keys():
-    if pkg in args.ignore:
+    if any(re.match(fnmatch.translate(p), pkg) for p in args.ignore):
         continue
     v_aur = version_in_aur(pkg)
     v_inst = installed_version[pkg]
-    if vcs_version(pkg, v_aur) != vcs_version(pkg, v_inst):
+    if pyalpm.vercmp(v_inst, v_aur) < 0:
         updates.append(pkg + ' (%s -> %s)' % (v_inst, v_aur))
 
 # create the message for the block

@@ -4,6 +4,13 @@ List available updates from the Arch User Repository (AUR)
 
 ![](example.png)
 
+Note: Logic depends on checking installed version against aurweb, so it doesn't
+work well for VCS packages.
+Instead, these need to run `makepkg --nodep -nobuild` on the actual `PKGBUILD`,
+then either construct the version string via `makepkg --printsrcinfo` or parse
+`makepkg --packagelist`, probably setting `PKG{DEST,EXT}` to controlled values
+to make parsing more predictable.
+
 ## Setup / Usage
 
 Example i3blocks configuration:
@@ -32,4 +39,4 @@ Usage of IPV4 can be forced using `FORCE_IPV4=1`. This is useful, because the AU
 
 - python3 [requests library](http://docs.python-requests.org/en/master/)
 - optional: libnotify/notify-send
-
+- pyalpm
