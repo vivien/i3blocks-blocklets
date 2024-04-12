@@ -39,8 +39,20 @@ def create_argparse():
         '--aur',
         action = 'store_const',
         const = True,
-        default = _default('AUR', 'False', strbool),
-        help='Include AUR packages. Attn: Yaourt must be installed'
+        default = _default('AUR', '', strbool),
+        help='Include AUR packages.'
+    )
+    parser.add_argument(
+        '-t',
+        '--aur_helper',
+        default = _default('AUR_HELPER', 'yay'),
+        help='Specify an AUR helper to use. Must support -Qua'
+    )
+    parser.add_argument(
+        '-p',
+        '--aur_prefix',
+        default = _default('AUR_PREFIX', ''),
+        help='Prefix of lines to count when -Qua displays packages other than AUR'
     )
     parser.add_argument(
         '-y',
@@ -82,7 +94,7 @@ def get_updates():
         return []
 
     updates = [line.split(' ')[0]
-               for line in output.split('\n')
+               for line in output.strip().split('\n')
                if line]
 
     return updates
@@ -91,9 +103,9 @@ def get_updates():
 def get_aur_yaourt_updates():
     output = ''
     try:
-        output = check_output(['yaourt', '-Qua']).decode('utf-8')
+        output = check_output([args.aur_helper, '-Qua']).decode('utf-8')
     except subprocess.CalledProcessError as exc:
-        # yaourt exits with 1 and no output if no updates are available.
+        # helper may exit with code 1 and no output if no updates are available.
         # we ignore this case and go on
         if not (exc.returncode == 1 and not exc.output):
             raise exc
@@ -101,8 +113,8 @@ def get_aur_yaourt_updates():
         return []
 
     aur_updates = [line.split(' ')[0]
-                   for line in output.split('\n')
-                   if line.startswith('aur/')]
+                   for line in output.strip().split('\n')
+                   if line.startswith(args.aur_prefix)]
 
     return aur_updates
 
