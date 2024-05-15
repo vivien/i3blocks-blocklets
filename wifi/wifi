@@ -16,7 +16,8 @@
 
 #------------------------------------------------------------------------
 if [[ -z "$INTERFACE" ]] ; then
-    INTERFACE="${BLOCK_INSTANCE:-wlan0}"
+    #INTERFACE="${BLOCK_INSTANCE:-wlan0}"
+    INTERFACE="${INTERFACE:-$(ip route | awk '/^default/ { print $5 ; exit }')}"
 fi
 #------------------------------------------------------------------------
 
