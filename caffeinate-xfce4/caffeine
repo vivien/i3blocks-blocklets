@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+"""
+A caffeine button (similar idea with gnome caffeinate) for Disable the screensaver and auto suspend in i3 
+using i3blocks and xfce4-power-manager
+
+caffine is handled using the `xfce4-power-manager` command.
+"""
+
+__author__ = "DO Duy Huy Hoang <huyhoang8398.github.io>"
+__copyright__ = "Copyright (c) 2022 DO Duy Huy Hoang"
+__license__ = "MIT"
+__version__ = "1.0.0"
+
+import os
+import subprocess
+import json
+
+def caffeine_toggle():
+    '''Toggle caffeine'''
+    subprocess.run(["xfconf-query", "-c", "xfce4-power-manager", "-p", "/xfce4-power-manager/presentation-mode", "-T"], check=True)
+
+def clicked():
+    '''Returns True if the button was clicked'''
+    button = os.environ.get("BLOCK_BUTTON", None)
+    return bool(button)
+
+def on():
+    '''Returns True if caffeine is on'''
+    cmd = ["xfconf-query", "-c", "xfce4-power-manager", "-p", "/xfce4-power-manager/presentation-mode", "-v"]
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    output = proc.communicate()[0]
+    return u'true' ==  output.strip().decode("UTF-8")
+
+if clicked():
+    # toggle button click to turn on and off
+    caffeine_toggle()
+
+if on():
+    RTN = {"full_text":"<span font='Iosevka Nerd Font'>\ue61b</span>" " "}
+else:
+    RTN = {"full_text":"<span font='Iosevka Nerd Font'>\uf9b1</span>" " "}
+
+print(json.dumps(RTN))

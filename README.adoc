@@ -17,6 +17,7 @@ This repository contains a set of scripts (a.k.a. *blocklets*) for link:https://
 | link:battery2[] | Pretty battery info
 | link:batterybar[] | Show battery info graphically as a bar
 | link:calendar[] | Current date/time and click for calendar
+| link:caffeinate-xfce4[] | Toggle Caffeinate for Disable the screensaver and auto suspend with xfce4-power-manager
 | link:cpu_usage[] | Show current CPU usage
 | link:cpu_usage2[] | Show current CPU usage (C version)
 | link:disk[] | Show disk usage (space used) for a given directory
