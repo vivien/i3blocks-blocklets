@@ -31,7 +31,7 @@ LABEL[10]="󱑈"
 LABEL[11]="󱑉"
 
 # Pick clock icon based upon hour
-HOUR=$(date +"%H")
+HOUR=$(date +"%-H")
 INDEX=$((HOUR % 12))
 CHOSEN_LABEL=${LABEL[$INDEX]}
 
