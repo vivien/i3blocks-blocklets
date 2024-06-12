@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+
+"""Parse the RSS feed of Arch Linux latest news.
+
+Author: flyingscorpio
+"""
+
+import os
+import subprocess
+import feedparser  # type: ignore
+
+
+def main() -> None:
+    """Parse the rss feed."""
+
+    last_seen_file_path = os.path.expanduser("~/.cache/arch_linux_news_last_seen")
+
+    try:
+        with open(last_seen_file_path, "r") as last_seen_file:
+            last_seen = last_seen_file.read().strip()
+    except FileNotFoundError:
+        with open(last_seen_file_path, "w") as last_seen_file:
+            last_seen_file.write("")
+
+    url = "https://www.archlinux.org/feeds/news/"
+    feed = feedparser.parse(url)
+    latest_title = feed["entries"][0]["title"]
+    latest_link = feed["entries"][0]["link"]
+
+    if os.environ.get("BLOCK_BUTTON", "") == "1":
+        last_seen = feed["entries"][0]["published"]
+
+        with open(last_seen_file_path, "w") as last_seen_file:
+            last_seen_file.write(last_seen)
+
+        subprocess.run(f"xdg-open {latest_link}", shell=True, check=True)
+
+    if feed["entries"][0]["published"] != last_seen:
+        print(latest_title)
+    else:
+        print("Arch Linux news is up to date")
+
+
+if __name__ == "__main__":
+    main()
