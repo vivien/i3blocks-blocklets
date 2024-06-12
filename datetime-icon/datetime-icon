@@ -1,0 +1,68 @@
+#!/usr/bin/env sh
+
+# Display the current date and time alongside a nice analogue clock icon that changes based on the current hour.
+
+# Copyright 2024 Max Gilmour
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+LABEL[0]="󱑊"
+LABEL[1]="󱐿"
+LABEL[2]="󱑀"
+LABEL[3]="󱑁"
+LABEL[4]="󱑂"
+LABEL[5]="󱑃"
+LABEL[6]="󱑄"
+LABEL[7]="󱑅"
+LABEL[8]="󱑆"
+LABEL[9]="󱑇"
+LABEL[10]="󱑈"
+LABEL[11]="󱑉"
+
+# Pick clock icon based upon hour
+HOUR=$(date +"%-H")
+INDEX=$((HOUR % 12))
+CHOSEN_LABEL=${LABEL[$INDEX]}
+
+# Get date string
+# Uncomment the date format you wish to use
+formatted_date() {
+    # HH:MM Weekday YYYY-MM-DD (24h)
+    date "+%R %a %F"
+
+    # HH:MM Day YYYY-MM-DD (12h)
+    # date "+%I:%M %a %F"
+
+    # Locale's date & time
+    # date "+%c"
+    
+    # HH:MM AM/PM Weekday, DD Month YYYY (12h)
+    # date "+%R %p, %d %B %Y"
+}
+
+formatted_date_short() {
+    # HH:MM (24h)
+    # date "+%R"
+
+    # HH:MM (12h)
+    # date "+%I:%M"
+    
+    # HH:MM YYYY-MM-DD
+    date "+%R %F"
+}
+
+# Full text
+echo "${CHOSEN_LABEL}  $(formatted_date)"
+# Short text
+echo "$(formatted_date_short)"
