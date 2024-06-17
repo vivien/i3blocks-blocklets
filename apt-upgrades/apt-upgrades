@@ -38,7 +38,7 @@ Options:
 done
 
 read upgraded new removed held < <(
-aptitude full-upgrade --simulate --assume-yes |\
+LANGUAGE=en_US LANG=en_US.UTF-8 aptitude full-upgrade --simulate --assume-yes |\
     grep -m1 '^[0-9]\+ packages upgraded,' |\
     tr -cd '0-9 ' |\
     tr ' ' '\n' |\
@@ -57,8 +57,13 @@ if [[ $upgraded != 0 ]] || [[ $new != 0 ]] || [[ $removed != 0 ]] || [[ $held !=
     echo $color
 elif [[ $ALWAYS_PRINT == 1 ]]; then
     color="$NONPENDING_COLOR"
-    echo -e "$PENDING_SYMBOL$upgraded/$new/$removed/$held"
-    echo -e "$PENDING_SYMBOL$upgraded/$new/$removed/$held"
+    if [[ $SYMBOL_ONLY == 1 ]]; then
+        echo -e "$PENDING_SYMBOL"
+        echo -e "$PENDING_SYMBOL"
+    else
+        echo -e "$PENDING_SYMBOL$upgraded/$new/$removed/$held"
+        echo -e "$PENDING_SYMBOL$upgraded/$new/$removed/$held"
+    fi
     echo $color
 fi
 
