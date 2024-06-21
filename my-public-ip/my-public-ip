@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+#
+# Copyright (C) 2024 Gregory David <dev@groolot.net>
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import os
+import subprocess
+import sys
+from typing import Dict, List
+
+CONFIG: dict = dict(os.environ)
+DEFAULT_COLOR: str = CONFIG.get("color", "#ffffff")
+PANGO_MARKUP: bool = CONFIG.get("markup", "") == "pango"
+PUBLIC_IP_PROVIDER: str = CONFIG.get("public_ip_provider", "ip.yunohost.org")
+
+
+def print_format(
+    long_text: str,
+    short_text: str,
+    color: str = DEFAULT_COLOR,
+    pango: bool = PANGO_MARKUP,
+):
+    if pango:
+        print(f"<span color='{color}'>{long_text}</span>")
+        print(f"<span color='{color}'>{short_text}</span>")
+    else:
+        print(long_text)
+        print(short_text)
+        print(color)
+
+
+def my_public_ip_block():
+    ip_getters: Dict[str, List[str]] = {
+        "curl": ["-s", "-L"],
+        "wget": ["-q", "-O", "-"],
+    }
+    my_public_ip: subprocess.CompletedProcess = None
+
+    for getter, getter_options in ip_getters.items():
+        try:
+            args = [getter] + getter_options + [PUBLIC_IP_PROVIDER]
+            my_public_ip = subprocess.run(
+                args,
+                universal_newlines=True,
+                check=False,
+                capture_output=True,
+            )
+            break
+        except FileNotFoundError:
+            continue
+
+    if not my_public_ip:
+        print_format(long_text="Need curl or wget", short_text="")
+        return 33
+
+    my_public_ip = my_public_ip.stdout.strip()
+    if my_public_ip:
+        if CONFIG.get("BLOCK_BUTTON") == "2":
+            for selection in ["clipboard", "primary"]:
+                with subprocess.Popen(
+                    ["xclip", "-selection", selection],
+                    stdin=subprocess.PIPE,
+                    close_fds=True,
+                ) as p:
+                    p.communicate(input=my_public_ip.encode("utf_8"))
+        print_format(long_text=f" {my_public_ip}", short_text=" ")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(my_public_ip_block())
