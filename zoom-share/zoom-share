@@ -1,0 +1,24 @@
+#!/bin/bash
+
+DUNST_TIMEOUT=${DUNST_TIMEOUT:-3}        # duration in seconds
+DUNST_URGENCY=${DUNST_URGENCY:-"low"}    # low, normal or critical
+
+xwininfo -name as_toolbar >/dev/null 2>&1
+if [ $? -eq 0 ]; then
+    if ! [ -f "/tmp/i3zoom.lock" ]; then
+        touch /tmp/i3zoom.lock
+        notify-send -u ${DUNST_URGENCY} -t ${DUNST_TIMEOUT}000 Zoom "Sharing mode activated"
+        sleep ${DUNST_TIMEOUT}
+        notify-send DUNST_COMMAND_PAUSE
+        echo "<span foreground=\"#FF0000\"></span>"
+    else
+        echo "<span foreground=\"#FF0000\"></span>"
+    fi
+
+else
+    if [ -f "/tmp/i3zoom.lock" ]; then
+        rm /tmp/i3zoom.lock
+        notify-send DUNST_COMMAND_RESUME
+    fi
+    echo "<span foreground=\"#00FF00\"></span>"
+fi
