@@ -10,31 +10,35 @@ __copyright__ = "Copyright (c) 2019 Jessey White-Cinis"
 __license__ = "MIT"
 __version__ = "1.1.0"
 
+import json
 import os
 import subprocess as sp
-import json
+
 
 def mute_toggle():
-    '''Toggle dunst notifications'''
+    """Toggle dunst notifications"""
     sp.run(["dunstctl", "set-paused", "toggle"], check=True)
 
+
 def clicked():
-    '''Returns True if the button was clicked'''
+    """Returns True if the button was clicked"""
     button = os.environ.get("BLOCK_BUTTON", None)
     return bool(button)
 
+
 def muted():
-    '''Returns True if Dunst is muted'''
-    output = sp.check_output(('dunstctl', 'is-paused'))
-    return u'true' ==  output.strip().decode("UTF-8")
+    """Returns True if Dunst is muted"""
+    output = sp.check_output(("dunstctl", "is-paused"))
+    return "true" == output.strip().decode("UTF-8")
+
 
 if clicked():
     # toggle button click to turn mute on and off
     mute_toggle()
 
 if muted():
-    RTN = {"full_text":"<span font='Font Awesome 5 Free Solid' color='#BE616E'>\uf1f6</span>"}
+    RTN = {"full_text": "<span color='white'>\uf1f7</span>"}
 else:
-    RTN = {"full_text":"<span font='Font Awesome 5 Free Solid' color='#A4B98E'>\uf0f3</span>"}
+    RTN = {"full_text": "<span color='white'>\uf0f3</span>"}
 
 print(json.dumps(RTN))
