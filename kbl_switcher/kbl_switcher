@@ -1,0 +1,38 @@
+#!/bin/sh
+
+#Get the current layout
+CURRENT_LAYOUT=$(setxkbmap -print | awk -F"+" '/xkb_symbols/ {print $2}')
+
+LAYOUT_CHANGE=0
+case $BLOCK_BUTTON in
+  1) ((LAYOUT_CHANGE++));; # Left button, next layout on the list
+  3) ((LAYOUT_CHANGE--));; # Right button, previous layout on the list
+esac
+
+# If there is intent to change the layout
+if [ "$LAYOUT_CHANGE" != "0" ]; then
+	# Function to find the current position
+	find_position_in_array() {
+		NEEDLE=$1
+		read -a HAYSTACK <<< $2
+		POSITION=0
+		for HAY in "${HAYSTACK[@]}"; do
+			if [ "$HAY" = "$NEEDLE" ]; then
+				break
+			fi
+			((++POSITION))
+		done
+		echo $POSITION
+	}
+	IFS=',' read -r -a LAYOUTS <<< $(echo $LAYOUTS | sed 's/[[:space:]]//g')
+	LAYOUT_COUNT=${#LAYOUTS[@]}
+	CURRENT_INDEX=$(find_position_in_array "$CURRENT_LAYOUT" "${LAYOUTS[*]}")
+	#Calculate the next layout
+	NEXT=$(echo "($CURRENT_INDEX + $LAYOUT_CHANGE) % $LAYOUT_COUNT" | bc)
+	CURRENT_LAYOUT="${LAYOUTS[$NEXT]}"
+	setxkbmap "$CURRENT_LAYOUT"
+
+fi
+
+# Output the current layout
+echo $(tr '[:lower:]' '[:upper:]' <<< $CURRENT_LAYOUT)
