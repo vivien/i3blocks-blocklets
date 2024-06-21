@@ -1,0 +1,157 @@
+#!/usr/bin/env python3
+
+"""Parse json from corona-stats to display in i3blocks.
+
+Author: flyingscorpio
+"""
+
+from datetime import datetime, timedelta
+import json
+import locale
+import os
+from pathlib import Path
+import subprocess
+from typing import Any, Dict, List, Optional
+
+import matplotlib.pyplot as plt  # type: ignore
+
+
+def grab_json_with_curl(country: str) -> str:
+    """Run the curl command in a shell and grab the output as json."""
+
+    curl_cmd = subprocess.run(
+        f"curl -s 'https://corona-stats.online/{country}?source=1&format=json'",
+        capture_output=True,
+        check=True,
+        shell=True,
+    )
+
+    return curl_cmd.stdout.decode()
+
+
+def write_data_to_file(data: str, path: Path) -> None:
+    """Write the data from the curl command to a file."""
+
+    with open(path, "w") as corona_file:
+        corona_file.write(data)
+
+
+def read_json_from_file(path: Path) -> Optional[List[Dict[str, Any]]]:
+    """Read from the corona file and return a list given by json format."""
+
+    with open(path, "r") as corona_file:
+        content = corona_file.read()
+
+    try:
+        data: List[Dict[str, Any]] = json.loads(content)
+    except json.decoder.JSONDecodeError:
+        return None
+
+    return data
+
+
+def select_dict_by_province(data: List[Dict[str, Any]],
+                            province: str = "Global") -> Dict[str, Any]:
+    """Given the main data list from json, return the dict to work on based on
+    the province.
+    """
+
+    if province == "Global":
+        province = ""
+
+    for item in data:
+        if item['province'] == province:
+            return item
+
+    raise KeyError(f"{province} wasn't found in the data")
+
+
+def print_to_output(confirmed: int, today_confirmed_int: int,
+                    deaths: int, today_deaths_int: int) -> None:
+    """Format the data for the i3block."""
+
+    locale.setlocale(locale.LC_ALL, '')
+
+    if today_confirmed_int >= 0:
+        today_confirmed = f"↑{today_confirmed_int:n}"
+    else:
+        today_confirmed = f"↓{today_confirmed_int:n}"
+
+    if today_deaths_int >= 0:
+        today_deaths = f"↑{today_deaths_int:n}"
+    else:
+        today_deaths = f"↓{today_deaths_int:n}"
+
+    output = f"{confirmed:n} ({today_confirmed})  ✝ {deaths:n} ({today_deaths})"
+
+    print(output)
+
+
+def generate_graph(data: List[int]) -> None:
+    """Generate a small graph based on the evolution of numbers in the list."""
+
+    plt.plot(
+        [
+            datetime.today().date() - timedelta(days=i)
+            for i in reversed(range(len(data)))
+        ],
+        data
+    )
+    plt.show()
+
+
+def is_up_to_date(path: Path) -> bool:
+    """Stat the downloaded file and return if it is up to date."""
+
+    stat_cmd = subprocess.run(
+        f"stat -c %y {path} | cut -d' ' -f1",
+        capture_output=True,
+        check=False,
+        shell=True,
+    )
+    stat_date = stat_cmd.stdout.decode().strip()
+
+    current_date = datetime.now()
+    today = f"{current_date.year}-{current_date.month:02d}-{current_date.day:02d}"
+
+    return stat_date == today
+
+
+def main() -> None:
+    """Grab the data, select the region, split the values."""
+
+    country = os.environ.get("COUNTRY", default="France")
+    corona_file = Path(f"~/.cache/corona_stats_{country}").expanduser()
+
+    if not is_up_to_date(corona_file):
+        print(f"Downloading data from {country} to corona file")
+        curl_data = grab_json_with_curl(country)
+        write_data_to_file(curl_data, corona_file)
+
+    data = read_json_from_file(corona_file)
+    while data is None:
+        print(f"Downloading data from {country} to corona file")
+        curl_data = grab_json_with_curl(country)
+        write_data_to_file(curl_data, corona_file)
+        data = read_json_from_file(corona_file)
+
+    data_dict = select_dict_by_province(data)
+
+    confirmed = data_dict["confirmed"]
+    today_confirmed = data_dict["confirmedByDay"][-1] - data_dict["confirmedByDay"][-2]
+    deaths = data_dict["deaths"]
+    today_deaths = data_dict["deathsByDay"][-1] - data_dict["deathsByDay"][-2]
+
+    try:
+        if os.environ["BLOCK_BUTTON"] == "1":
+            generate_graph(data_dict["confirmedByDay"])
+        elif os.environ["BLOCK_BUTTON"] == "3":
+            generate_graph(data_dict["deathsByDay"])
+        else:
+            raise KeyError
+    except KeyError:
+        print_to_output(confirmed, today_confirmed, deaths, today_deaths)
+
+
+if __name__ == "__main__":
+    main()
