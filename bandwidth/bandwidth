@@ -37,7 +37,7 @@ done
 if [[ -z $INTERFACE ]] && [[ -n $BLOCK_INSTANCE ]]; then
   INTERFACE=$BLOCK_INSTANCE
 elif [[ -z $INTERFACE ]]; then
-  INTERFACE=$(ip route | awk '/^default/ { print $5 ; exit }')
+  INTERFACE=$(ip route | sed -e 's/^\(\S* \).*\(dev\)/\1\2/' | awk '/^default/ { print $3 ; exit }')
 fi
 
 # Exit if there is no default route
