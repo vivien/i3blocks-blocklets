@@ -1,0 +1,3 @@
+#!/bin/sh
+
+redshift -p 2> /dev/null | grep -oE '[0-9]{1,5}K'
