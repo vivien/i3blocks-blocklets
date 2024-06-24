@@ -20,7 +20,7 @@ enum {
 
 void usage(char *argv[])
 {
-  printf("Usage: %s [-b|B] [-t seconds] [-i interface] [-w Bytes:Bytes] [-c Bytes:Bytes] [-s] [-h]\n", argv[0]);
+  printf("Usage: %s [-b|B] [-t seconds] [-i interface] [-w Bytes:Bytes] [-c Bytes:Bytes] [-s] [-n Bytes:Bytes] [-h]\n", argv[0]);
   printf("\n");
   printf("-b \t\tuse bits/s\n");
   printf("-B \t\tuse Bytes/s  (default)\n");
@@ -30,6 +30,7 @@ void usage(char *argv[])
   printf("-w Bytes:Bytes\tSet warning (color orange) for Rx:Tx bandwidth. (default: none)\n");
   printf("-c Bytes:Bytes\tSet critical (color red) for Rx:Tx bandwidth. (default: none)\n");
   printf("-s \t\tuse SI units\n");
+  printf("-n Bytes:Bytes\tdon't print if Rx:Tx bandwidth are below bytes\n");
   printf("-h \t\tthis help\n");
   printf("\n");
 }
@@ -131,6 +132,7 @@ int main(int argc, char *argv[])
   char str_ifaces[BUFSIZ] = {0};
   char **ifaces;
   int num_ifaces;
+  int supress_rx = 0, supress_tx = 0;
   int warningrx = 0, warningtx = 0, criticalrx = 0, criticaltx = 0;
   int divisor = 1024;
   char *envvar = NULL;
@@ -170,11 +172,18 @@ int main(int argc, char *argv[])
   if (envvar)
     label = envvar;
 
-  while (c = getopt(argc, argv, "bBsht:i:w:c:"), c != -1) {
+  while (c = getopt(argc, argv, "bBsht:i:w:c:n:"), c != -1) {
     switch (c) {
     case 'b':
     case 'B':
       unit = c;
+      break;
+    case 'n':
+      if (sscanf(optarg, "%d:%d", &supress_rx, &supress_tx) != 2) {
+        usage(argv);
+        exit(1);
+        return STATE_UNKNOWN;
+      }
       break;
     case 't':
       t = atoi(optarg);
@@ -211,10 +220,16 @@ int main(int argc, char *argv[])
 
     rx = (received - received_old) / (float)(s - s_old);
     tx = (sent - sent_old) / (float)(s - s_old);
-    printf("%s", label);
-    display(unit, divisor, rx, warningrx, criticalrx);
-    printf(" ");
-    display(unit, divisor, tx, warningtx, criticaltx);
+    if (
+        (supress_rx  == 0 && supress_tx == 0) || 
+        (supress_rx !=0 && rx > supress_rx) ||
+        (supress_tx !=0 && tx > supress_tx) 
+        ) {
+      printf("%s", label);
+      display(unit, divisor, rx, warningrx, criticalrx);
+      printf(" ");
+      display(unit, divisor, tx, warningtx, criticaltx);
+    }
     printf("\n");
     fflush(stdout);
     s_old = s;
