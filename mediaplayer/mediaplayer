@@ -26,6 +26,7 @@
 
 use Time::HiRes qw(usleep);
 use Env qw(BLOCK_INSTANCE);
+use HTML::Entities;
 
 use constant DELAY => 50; # Delay in ms to let network-based players (spotify) reflect new data.
 use constant SPOTIFY_STR => 'spotify';
@@ -94,8 +95,8 @@ sub cmus {
                 my $key = shift @data;
                 my $value = join ' ', @data;
 
-                @metadata[0] = $value if $key eq 'artist';
-                @metadata[1] = $value if $key eq 'title';
+                @metadata[0] = encode_entities($value) if $key eq 'artist';
+                @metadata[1] = encode_entities($value) if $key eq 'title';
             }
         }
 
@@ -114,7 +115,7 @@ sub mpd {
     my $data = qx(mpc current);
     if (not $data eq '') {
         buttons("mpd");
-        print($data);
+        print(encode_entities($data));
         exit 0;
     }
 }
@@ -127,12 +128,12 @@ sub playerctl {
     # exit status will be nonzero when playerctl cannot find your player
     exit(0) if $? || $artist eq '(null)';
 
-    push(@metadata, $artist) if $artist;
+    push(@metadata, encode_entities($artist)) if $artist;
 
     my $title = qx(playerctl $player_arg metadata title);
     exit(0) if $? || $title eq '(null)';
 
-    push(@metadata, $title) if $title;
+    push(@metadata, encode_entities($title)) if $title;
 
     print(join(" - ", @metadata)) if @metadata;
 }
@@ -141,7 +142,7 @@ sub rhythmbox {
     buttons('rhythmbox');
 
     my $data = qx(rhythmbox-client --print-playing --no-start);
-    print($data);
+    print(encode_entities($data));
 }
 
 if ($player_arg =~ /mpd/) {
