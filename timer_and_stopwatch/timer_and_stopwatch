@@ -8,6 +8,7 @@ DEFAULT_TIMER=${DEFAULT_TIMER:-60}
 PLAY_LABEL=${PLAY_LABEL:-(playing)}
 PAUSE_LABEL=${PAUSE_LABEL:-(paused)}
 TIMER_LOOP=${TIMER_LOOP:-false}
+UNIX_TIME=${UNIX_TIME:-false}
 NEUTRAL_COLOR=${NEUTRAL_COLOR:-#000000}
 ###### Default environment variables ######
 
@@ -41,6 +42,7 @@ reset_times() {
 }
 
 set_mode() {
+  previous_unix_time=-1
   case ${modes[$mode]} in
     'timer' )
       running=false
@@ -132,7 +134,23 @@ esac
 ###### Click processing ######
 
 ###### Time increment ######
-$running && time=$(( time + incr ))
+if [[ $UNIX_TIME == true ]]; then
+  current_unix_time=$(date +%s)
+fi
+if [[ $running == true ]]; then
+  if [[ $UNIX_TIME == true ]]; then
+    if (( previous_unix_time > 0 )); then
+      incr=$(( current_unix_time - previous_unix_time ))
+    else
+      incr=1
+    fi
+    [[ ${modes[$mode]} == timer ]] && incr=$((-incr))
+  fi
+  time=$(( time + incr ))
+fi
+if [[ $UNIX_TIME == true ]]; then
+  previous_unix_time=$current_unix_time
+fi
 if (( mode == 0 )); then
   if (( time <= 0 )); then
     bgcolor='#FF0000'
@@ -159,6 +177,7 @@ cat << EOF
 "status_symbol":"$status_symbol",\
 "time":"$time",\
 "initial_time":"$initial_time",\
+"previous_unix_time":"$previous_unix_time",\
 "incr":"$incr",\
 "running":"$running",\
 "mode":"$mode",\
