@@ -59,7 +59,14 @@ else:
     FA_PLUG = "<span font='FontAwesome'>\uf1e6</span>"
 
     # stands for using battery
-    FA_BATTERY = "<span font='FontAwesome'>\uf240</span>"
+    if percentleft >= 75:
+        FA_BATTERY = "<span font='FontAwesome'>\uf240</span>"
+    elif percentleft >= 50:
+        FA_BATTERY = "<span font='FontAwesome'>\uf241</span>"
+    elif percentleft >= 25:
+        FA_BATTERY = "<span font='FontAwesome'>\uf242</span>"
+    else:
+        FA_BATTERY = "<span font='FontAwesome'>\uf243</span>"
 
     # stands for unknown status of battery
     FA_QUESTION = "<span font='FontAwesome'>\uf128</span>"
