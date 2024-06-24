@@ -126,7 +126,7 @@ sub playerctl {
     chomp $artist;
     # exit status will be nonzero when playerctl cannot find your player
     exit(0) if $? || $artist eq '(null)';
-
+    chomp($artist) if $artist;
     push(@metadata, $artist) if $artist;
 
     my $title = qx(playerctl $player_arg metadata title);
