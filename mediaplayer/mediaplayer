@@ -59,6 +59,10 @@ sub buttons {
             system("cmus-remote --pause");
         } elsif ($ENV{'BLOCK_BUTTON'} == 3) {
             system("cmus-remote --next");
+        } elsif ($ENV{'BLOCK_BUTTON'} == 4) {
+            system("cmus-remote -v +10%");
+        } elsif ($ENV{'BLOCK_BUTTON'} == 5) {
+            system("cmus-remote -v -10%");
         }
     } elsif ($method eq 'playerctl') {
         if ($ENV{'BLOCK_BUTTON'} == 1) {
