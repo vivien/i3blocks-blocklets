@@ -70,6 +70,8 @@ You may want to take a look at the individual blocklet directories, which contai
 NOTE: configurations reference `$SCRIPT_DIR`, meaning the directory that you put the script into. +
 You must change `$SCRIPT_DIR` appropriately to coincide with where you put your scripts, for more info see the link:https://github.com/vivien/i3blocks-contrib/wiki/FAQ#blocklets-refer-to-script_dir-what-does-that-mean-how-can-i-use-it[FAQ].
 
+NOTE: if your default shell is different from `bash` (`zsh`, `fish` etc.), then you might want to edit a global `command` property in your config to `bash $SCRIPT_DIR/$BLOCK_NAME/$BLOCK_NAME`
+
 Want to contribute?
 Great!
 Check the link:https://github.com/vivien/i3blocks-contrib/blob/master/CONTRIBUTING.md[contribution guidelines] in order to get started.
