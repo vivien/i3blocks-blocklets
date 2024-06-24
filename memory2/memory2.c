@@ -15,6 +15,13 @@ typedef unsigned long ulong;
 typedef unsigned int uint;
 typedef struct sysinfo sysinfo_t;
 
+struct mem_stats_sg
+{
+  long long total;
+  long long free;
+  long long cache;
+} typedef mem_stats_sg;
+
 
 typedef struct {
   char bytes[4];
@@ -72,6 +79,50 @@ int clamp(int value, int min, int max) {
   return value < min ? min : (value > max ? max : value);
 }
 
+/**
+ * The idea for this solution came from libstatgrab
+ * https://github.com/libstatgrab/libstatgrab
+ */
+void get_mem_stats(mem_stats_sg* mem_stats_buf, int ignore_swap)
+{
+  #define LINE_BUF_SIZE 256
+  char *line_ptr, line_buf[LINE_BUF_SIZE];
+  long long value;
+  FILE *f = fopen("/proc/meminfo", "r");
+  if(f != NULL)
+  {
+
+    #define MEM_TOTAL_PREFIX    "MemTotal:"
+    #define MEM_FREE_PREFIX     "MemFree:"
+    #define MEM_CACHED_PREFIX   "Cached:"
+    while ((line_ptr = fgets(line_buf, sizeof(line_buf), f)) != NULL)
+    {
+      if(sscanf(line_buf, "%*s %lld kB", &value) != 1)
+        continue;
+
+      if(strncmp(line_buf, MEM_TOTAL_PREFIX, sizeof(MEM_TOTAL_PREFIX) - 1) == 0)
+        mem_stats_buf->total = value;
+      else if(strncmp(line_buf, MEM_FREE_PREFIX, sizeof(MEM_FREE_PREFIX) - 1) == 0)
+        mem_stats_buf->free = value;
+      else if(strncmp(line_buf, MEM_CACHED_PREFIX, sizeof(MEM_CACHED_PREFIX) - 1) == 0)
+        mem_stats_buf->cache = value;
+    }
+
+    if(ignore_swap == 1)
+      mem_stats_buf->free += mem_stats_buf->cache;
+
+    mem_stats_buf->total *= 1024;
+    mem_stats_buf->free *= 1024;
+    mem_stats_buf->cache *= 1024;
+
+    #undef MEM_TOTAL_PREFIX
+    #undef MEM_FREE_PREFIX
+    #undef MEM_CACHED_PREFIX
+
+    fclose(f);
+    
+  }
+}
 
 int main(int argc, char *argv[])
 {
@@ -83,7 +134,10 @@ int main(int argc, char *argv[])
   int critical = 80;
   char* color_warning = ORANGE;
   char* color_critical = RED;
+  int ignore_swap = 0;
   
+  mem_stats_sg* mem_stats_buf = malloc(sizeof(mem_stats_sg));
+
   envvar = getenv("bar_chars");
   if (envvar)
     characters = envvar;
@@ -102,6 +156,9 @@ int main(int argc, char *argv[])
   envvar = getenv("color_critical");
   if (envvar)
     color_critical = envvar;
+  envvar = getenv("show_available");
+  if(envvar)
+    ignore_swap = (strcmp(envvar, "false")) ? 1 : 0;
   
   uint count = utf8_char_count(characters);
   utf8_char* bar_chars = (utf8_char*)malloc(count * sizeof(utf8_char));
@@ -115,15 +172,30 @@ int main(int argc, char *argv[])
   
   uint t = 1;
   while (1) {
+    /**
+     * Illustration by @mwittig from GitHub:
+     * https://github.com/pimatic/pimatic-sysinfo/issues/19#issuecomment-478371045
+     * 
+     * |------------------------------------------------|
+     * |                      R A M                     |
+     * |---------------|--------------------------------|
+     * |               |     available (6) estimated    |
+     * |---------------|----------------------|---------|
+     * |  active (2)   | buffers/cache (5)    | free (3)|
+     * |--------------------------------------|---------|
+     * |                 total (1)                      |
+     * |------------------------------------------------|
+     * 
+     * This illustrations shows that if we don't ignore the cache, we
+     * always get almost 100% memory usage, due to how memory is handled.
+     */
     
+    get_mem_stats(mem_stats_buf, ignore_swap);
 
-    sysinfo_t info;
-    sysinfo(&info);
-
-    long total = info.totalram;
-    long free  = info.freeram;
+    long total = (long)mem_stats_buf->total;
+    long free = (long)mem_stats_buf->free;
     long usage = total - free;
-    
+
     float percent = 100 * ((float)usage / total);
     float bar_percent = percent;
 
@@ -164,5 +236,6 @@ int main(int argc, char *argv[])
   }
   free(buffer);
   free(bar_chars);
+  free(mem_stats_buf);
   return EXIT_SUCCESS;
 }

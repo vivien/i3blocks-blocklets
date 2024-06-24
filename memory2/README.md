@@ -26,6 +26,7 @@ bar_chars=_▁▂▃▄▅▆▇█
 #warning=50
 #color_critical=#FF7373
 #color_warning=#FFA500
+#show_available=false
 ```
 
 E.g.
@@ -39,4 +40,5 @@ bar_size=20
 critical=50
 warning=20
 color_critical=#d9534f
+show_available=true
 ```
