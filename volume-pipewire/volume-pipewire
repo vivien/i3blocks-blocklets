@@ -3,6 +3,9 @@
 
 set -a
 
+# pactl output is localised (as opposed to pacmd)
+LC_ALL=C
+
 AUDIO_HIGH_SYMBOL=${AUDIO_HIGH_SYMBOL:-'  '}
 
 AUDIO_MED_THRESH=${AUDIO_MED_THRESH:-50}
