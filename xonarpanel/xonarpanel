@@ -1,0 +1,154 @@
+#!/usr/bin/env sh
+
+# Copyright 2020-2021 LibreDrip
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# Tested with Xonar DGX
+
+#CARDNUMBER=1
+CARDNAME="Xonar"
+OUTPUTNAME='Analog Output'
+CARDSTRING=$(grep "${CARDNAME}" < /proc/asound/cards)
+
+SPEAKERSITEM='Stereo Headphones'
+HEADPHONESITEM='Stereo Headphones FP'
+
+HEADPHONES="  Item0: 'Stereo Headphones FP'"
+SPEAKERS="  Item0: 'Stereo Headphones'"
+
+_setheadphones () {
+  amixer -c $CARDNUMBER set "$OUTPUTNAME" "$HEADPHONESITEM" > /dev/null
+}
+
+_setspeakers () {
+  amixer -c $CARDNUMBER set "$OUTPUTNAME" "$SPEAKERSITEM" > /dev/null
+}
+
+_check () {
+  CURRENTOUTPUT="$(amixer -c $CARDNUMBER get "$OUTPUTNAME" | grep Item0:)"
+}
+
+_print () {
+  case ${CURRENTOUTPUT} in
+    "$HEADPHONES")
+      # echo "🎧"
+      echo ""
+      # echo ""
+      ;;
+    "$SPEAKERS")
+      echo "🔉"
+      # echo "蓼" # shown as asian character on some fonts
+      ;;
+  esac
+}
+
+_notify () {
+  case ${CURRENTOUTPUT} in
+    "$HEADPHONES")
+      notify-send "[] Front-Panel"
+      ;;
+    "$SPEAKERS")
+      notify-send "[🔉] Back-Panel"
+      ;;
+  esac
+}
+
+_toggle () {
+  case $CURRENTOUTPUT in
+    "$SPEAKERS")
+      echo "[+] Switching to Front-Panel/Headphones"
+      amixer -c $CARDNUMBER set "$OUTPUTNAME" "$HEADPHONESITEM" > /dev/null
+      ;;
+    "$HEADPHONES")
+      echo "[+] Switching to Back-Panel/Speakers"
+      amixer -c $CARDNUMBER set "$OUTPUTNAME" "$SPEAKERSITEM" > /dev/null
+      ;;
+  esac
+}
+
+_usage() {
+  # sed -ne '/^#/!q;s/.\{1,2\}//;1d;p' < "$0"
+  cat <<HELP_USAGE
+Usage: xonarpanel [option]
+
+      -s return status using echo
+      -n return status as notification
+      -t toggle panel
+
+Toggle Front/Back-Panel for (Xonar) Audio Cards.
+HELP_USAGE
+}
+
+
+case $CARDSTRING in
+  " 0 [DGX            ]: CMI8786 - Xonar DGX")
+    CARDNUMBER=0 ;;
+  " 1 [DGX            ]: CMI8786 - Xonar DGX")
+    CARDNUMBER=1 ;;
+  " 2 [DGX            ]: CMI8786 - Xonar DGX")
+    CARDNUMBER=2 ;;
+  " 3 [DGX            ]: CMI8786 - Xonar DGX")
+    CARDNUMBER=3 ;;
+esac
+
+_check
+
+if [ $# -eq 0 ]; # if no option is passed
+then
+  # _check
+  # _print
+
+  _usage
+  # echo "no argument passed"
+  exit 0
+fi
+
+while :; do
+  case $1 in
+    -s)
+      _print
+      break
+      ;;
+    -n)
+      _notify
+      break
+      ;;
+    -t)
+      _toggle
+      break
+      ;;
+    -h)
+      _usage
+      break
+      ;;
+    -*)
+      echo "Wrong Argument"
+      exit 1
+      ;;
+  esac
+done
+
+# case $BUTTON in
+case $BLOCK_BUTTON in
+  1)   # left click
+    case ${CURRENTOUTPUT} in
+      "$HEADPHONES")
+        _setspeakers
+        ;;
+      "$SPEAKERS")
+        _setheadphones
+        ;;
+    esac
+esac
