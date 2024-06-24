@@ -16,10 +16,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 case $BLOCK_BUTTON in
-	1|3) pactl set-source-mute  $SOURCE toggle ;;
+	1|3) pactl set-source-mute $SOURCE toggle ;;
 esac
 
-case $(pacmd list-sources | grep -A 11 "$SOURCE" | awk '/muted/ {print $2; exit}') in
+case $(pactl get-source-mute $SOURCE | cut -d' ' -f2) in
     yes)
       echo ""
       ;;
