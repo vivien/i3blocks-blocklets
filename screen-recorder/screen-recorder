@@ -1,0 +1,26 @@
+#!/bin/sh
+
+ROOT="$(dirname "$0")"
+RECORD_TMP_FILE="${ROOT}/.recording"
+if [ -f "${RECORD_TMP_FILE}" ]; then
+    read filename < ${RECORD_TMP_FILE}
+    rm "${RECORD_TMP_FILE}"
+    # wait for program
+    sleep 1
+    x-www-browser "${filename}" > /dev/null
+    notify-send "Record Done" "Screen record store in ${filename}"
+    echo "⭕ ready"
+elif [ ! "$BLOCK_BUTTON" = "1" ]; then
+    echo "⭕ ready"
+else
+    filename="$(mktemp)"
+    position="$(slop -o -f "--x=%x --y=%y --width=%w --height=%h")"
+    if [ "$position" = "" ]; then
+        echo "⭕ ready"
+        rm "$filename"
+    else
+        echo $filename > "${RECORD_TMP_FILE}"
+        nohup byzanz-record ${position} -e "tail --follow=name ${RECORD_TMP_FILE}" $filename >/dev/null 2>&1 &
+        echo "🔴 recording (click to stop)"
+    fi
+fi
