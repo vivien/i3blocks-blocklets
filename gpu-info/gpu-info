@@ -1,0 +1,23 @@
+#!/usr/bin/env python
+
+import subprocess, os
+
+def get_info():
+    query = 'nvidia-smi --query-gpu=utilization.gpu,utilization.memory,memory.free,memory.used,memory.total,temperature.gpu --format=csv,noheader'
+    info = str(subprocess.getoutput(query))
+    keys = ['util', 'mem_pct', 'mem_free', 'mem_used', 'mem_total', 'temp']
+    info = map(lambda s: s.replace(' ', ''), info.split(',')) # Remove trailing spaces + space before %
+    return dict(zip(keys, info))
+
+if __name__ == '__main__':
+    use_icon      = (os.environ['USE_ICON'].lower()         in ['true', '1']) if 'USE_ICON' in os.environ else False
+    show_free_mem = (os.environ['SHOW_FREE_MEMORY'].lower() in ['true', '1']) if 'SHOW_FREE_MEMORY' in os.environ else False
+
+    gpu = get_info()
+
+    mem  = '' if use_icon else 'Mem:'  # Memory icon
+    temp = '' if use_icon else 'Temp:' # Temperature Icon
+    fmem = f", Free: {gpu['mem_free']}" if show_free_mem else '' # Free memory
+    
+    display = f"{gpu['util']}, {mem} {gpu['mem_used']} / {gpu['mem_total']} ({gpu['mem_pct']}{fmem}), {temp} {gpu['temp']}°C"
+    print(display)
