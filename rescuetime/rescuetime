@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+# Inspiration taken from: https://gist.github.com/kenkeiter/f9e353f93dc0d7d8e935
+
+import requests
+import json
+import os
+import sys
+from pathlib import Path
+from datetime import date, timedelta
+
+url = "https://www.rescuetime.com/anapi/data"
+
+rescuetime_key_path = Path.home() / ".rescuetime_key"
+api_key = None
+
+try:
+    with open(rescuetime_key_path) as f:
+        api_key = f.read().strip()
+except FileNotFoundError:
+    print(f"<span color='red'>'{rescuetime_key_path}' must be set</span>")
+    sys.exit(1)
+
+
+def rows_to_json(response_body):
+    entries = []
+    for row in response_body["rows"]:
+        entry = {}
+        for idx, row_header in enumerate(response_body["row_headers"]):
+            entry[row_header] = row[idx]
+        entries.append(entry)
+    return entries
+
+
+def calculate_productivity():
+    res = requests.get(url, params={
+        "key": api_key,
+        "perspective": "interval",
+        "restrict_kind": "productivity",
+        "interval": "day",
+        "restrict_begin": date.today().strftime('%Y-%m-%d'),
+        "format": "json",
+    })
+    res.raise_for_status()
+    data = rows_to_json(res.json())
+    productive_seconds = 0
+    for entry in data:
+        seconds = entry["Time Spent (seconds)"]
+        if entry["Productivity"] > 0:
+            productive_seconds += seconds
+    delta = timedelta(seconds=productive_seconds)
+    return delta
+
+result = calculate_productivity()
+fulltext = f"<span color='yellow'><span font='FontAwesome'>\uf060{result}</span></span>"
+print(fulltext)
