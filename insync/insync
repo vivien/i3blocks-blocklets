@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+COLOR_RUN=${COLOR_RUN:-#00FF00}
+COLOR_DOWN=${COLOR_DOWN:-#FF0000}
+com=$(pidof insync)
+retval=$?
+
+echo ""
+echo ""
+
+# Onclick, we open Insync
+[[ -z "${BLOCK_BUTTON}" ]] || insync show
+
+if [ $retval -eq 0 ]; then
+	echo $COLOR_RUN
+else
+	echo $COLOR_DOWN
+	# here we could (try to) re-start insync
+	# Commented out; be careful because if this is failing, 
+    # this script can consume a lot of resources:
+	# insync start
+	# funny enough, this would bring back Insync tray icon. 
+fi

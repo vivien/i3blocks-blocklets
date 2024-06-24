@@ -1,0 +1,125 @@
+#!/usr/bin/env python
+import subprocess
+import argparse
+import os
+
+def create_argparse():
+    def _default(name, default='', arg_type=str):
+        val = default
+        if name in os.environ:
+            val = os.environ[name]
+        return arg_type(val)
+
+    strlist = lambda s: s.split(',')
+
+    parser = argparse.ArgumentParser(description='Check cpus current frequency')
+    parser.add_argument(
+        '-c',
+        '--colors_frequency',
+        default = _default('COLORS_FREQ', '#85cc00,#b58900,#cb4b16,#dc322f',strlist),
+        help='colors for intervals (default=85cc00,#b58900,#cb4b16,#dc322f)'
+    ) # based on [jm3’s Solarized color reference in HTML+CSS](https://codepen.io/jm3/pen/xmLze)
+    parser.add_argument(
+        '-f',
+        '--frequencies',
+        default = _default('FREQUENCIES'),
+        help='frequencies intervals (default="")'
+    )
+    parser.add_argument(
+        '-m',
+        '--min_freq',
+        default = _default('MIN_FREQ', 1400,arg_type=int),
+        help='minimum frequency for color interval (default=1.4)'
+    )
+    parser.add_argument(
+        '-M',
+        '--max_freq',
+        default = _default('MAX_FREQ', 4100,arg_type=int),
+        help='maximum frequency for color interval (default=4.1)'
+    )
+    parser.add_argument(
+        '-s',
+        '--separator',
+        default = _default('SEPARATOR_FREQ','/' ,arg_type=str),
+        help='separator between frequencies (default=/)'
+    )
+    parser.add_argument(
+        '-i',
+        '--intervals_frequency',
+        default = _default('INTERVALS_FREQ', 3,arg_type=int),
+        help='number frequency of intervals for color (default=4)'
+    )
+    parser.add_argument(
+        '-u',
+        '--unit_frequency',
+        default = _default('UNIT_FREQUENCY',default='GHz'),
+        choices=['GHz','MHz'],
+        help='frequency unit (default=GHz, accepted= GHz, MHz)'
+    )
+    parser.add_argument(
+        '-a',
+        '--all_cpus',
+        action = 'store_true',
+        default = _default('ALL_CPUS_FREQUENCY',default=False,arg_type=bool),
+        help = 'Show all CPUs'
+    )
+    parser.add_argument(
+        '-v',
+        '--verbose',
+        action = 'store_const',
+        const = True,
+        default = _default('VERBOSE_FREQUENCY',default=False,arg_type=bool),
+        help = 'Produce verbose output'
+    )
+    return parser.parse_args()
+
+def get_cpus_freq_freq():
+    # define ranges and colors (len = len(ranges)+1)
+    #TODO : read this programmatically from  /sys/devices/system/something
+    # import lscpu cpu freq as MHz : split the long string 
+    cpus_freq_raw = (subprocess.check_output("lscpu -e=MHz", shell=True).strip()).decode().split('\n')
+    # convert to float, to GHz and strip header
+    cpus_freq=[float(c) for c in cpus_freq_raw [1:]]
+    return cpus_freq
+
+args = create_argparse()
+
+if args.frequencies:
+    # only one value
+    if ',' in args.frequencies:
+        args.frequencies = [int(f) for f in args.frequencies.split(',')]
+    else :
+        args.frequencies = [int(args.frequencies)]
+    args.intervals_frequency = len(args.frequencies)
+    args.max_freq = max(args.frequencies)
+    args.min_freq = min(args.frequencies)
+else:
+    args.frequencies = list(range(args.min_freq,args.max_freq,(args.max_freq-args.min_freq)//args.intervals_frequency))
+
+cpus_freq = get_cpus_freq_freq()
+
+if args.unit_frequency == 'GHz':
+    args.frequencies = [float(f)/1000 for f in args.frequencies]
+    args.max_freq = float(args.max_freq)/1000
+    args.min_freq = float(args.min_freq)/1000
+    cpus_freq = [float(f)/1000 for f in cpus_freq]
+    format_outpus = '.1f'
+else : 
+    format_outpus = 'd'
+    cpus_freq=[int(c) for c in cpus_freq]
+
+
+import bisect
+range_color = lambda x:args.colors_frequency[bisect.bisect_left(args.frequencies,x)]
+range_interval = lambda x:bisect.bisect_left(args.frequencies,x)
+
+if not args.all_cpus:
+    cpus_freq = [min(cpus_freq),max(cpus_freq)]
+
+if args.verbose:
+    print(f'{args=},cpus_freq=',[ f'{cf}:{range_interval(cf)}' for cf in cpus_freq])
+    # print('args.frequencies=',{n:e for n,e in  enumerate(args.frequencies)})
+else :
+    print( args.separator.join(
+        [ f'<span color="{range_color(cf)}">{cf:{format_outpus}}</span>' for cf in cpus_freq]
+            )+args.unit_frequency)

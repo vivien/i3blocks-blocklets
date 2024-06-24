@@ -16,7 +16,7 @@
 
 #------------------------------------------------------------------------
 if [[ -z "$INTERFACE" ]] ; then
-    INTERFACE="${BLOCK_INSTANCE:-wlan0}"
+    INTERFACE="${BLOCK_INSTANCE:-wlp3s0}"
 fi
 #------------------------------------------------------------------------
 
@@ -43,9 +43,18 @@ fi
 QUALITY=$(iw dev ${INTERFACE} link | grep 'dBm$' | grep -Eoe '-[0-9]{2}' | awk '{print  ($1 > -50 ? 100 :($1 < -100 ? 0 : ($1+100)*2))}')
 
 #------------------------------------------------------------------------
+case $BLOCK_BUTTON in
+    1)
+       QUALITY=$(iw "$INTERFACE" info | awk '/ssid/ {print $2}') # SSID
+       ;;
+    3)
+       nm-connection-editor
+       ;;
+esac
 
-echo $QUALITY% # full text
-echo $QUALITY% # short text
+
+echo $QUALITY # full text
+echo $QUALITY # short text
 
 # color
 if [[ $QUALITY -ge 80 ]]; then

@@ -61,6 +61,7 @@ fi
 IPADDR=$(ip addr show $IF | perl -n -e "/$AF ([^ \/]+).* scope global/ && print \$1 and exit")
 
 case $BLOCK_BUTTON in
+  1) IPADDR=$(hostname);;
   3) echo -n "$IPADDR" | xclip -q -se c ;;
 esac
 
