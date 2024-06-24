@@ -1,0 +1,95 @@
+#!/bin/bash
+
+# configuration
+
+reg_col=${color:-#00a800}
+reg_bgcol=${background:-#000000}
+err_col="#ffffff"
+err_bgcol="#ff0000"
+
+if which loginctl >/dev/null; then
+    LOGOUT_CMD=${LOGOUT_CMD:-"loginctl kill-session $XDG_SESSION_ID"}
+fi
+if [ -n "$SWAYSOCK" ]; then
+  # swaylock throws an error currently, force external configuration.
+  #LOCK_CMD=${LOCK_CMD:-"swaylock"}
+  LOCK_CMD=${LOCK_CMD:-""}
+elif [ -n "$I3SOCK" ]; then
+  LOCK_CMD=${LOCK_CMD:-"i3lock"}
+fi
+
+declare -ra actions=(logout lock)
+declare -rA labels=(
+  [logout]="${LOGOUT_LABEL:-}"
+  [lock]="${LOCK_LABEL:-}"
+)
+ERROR_LABEL="${ERROR_LABEL:-}"
+
+
+# global state
+
+declare -i sel=0
+declare action
+
+
+# helper functions
+
+function reply() {
+  col="$reg_col"
+  bgcol="$reg_bgcol"
+  if [ $# -ge 2 ]; then
+    col="$err_col"
+    bgcol="$err_bgcol"
+  fi
+  printf "<span color='%s' bgcolor='%s'>%s</span>\n" "$col" "$bgcol" "$1"
+}
+
+function update_action() {
+  sel=$((($sel + ${1:-0}) % ${#actions[@]}))
+  action=${actions[$sel]}
+}
+
+function perform() {
+  declare -u vname=${1}_CMD
+  cmd=${!vname}
+  if [ -z "$cmd" ]; then
+    echo "$vname undefined"
+    return 1
+  elif ! $cmd; then
+    echo "$cmd failed"
+    return 1
+  else
+    return 0
+  fi
+}
+
+
+# initialization
+
+update_action
+reply ${labels[$action]}
+
+
+# main loop
+
+while read button; do
+  err=""
+  declare -i delta=0
+  declare -i res=0
+  case $button in
+    1)  err=`perform $action`; res=$?;;
+    4)  delta=-1;;
+    *)  delta=1;;
+  esac
+  update_action delta
+  if [ 0 -eq $res ]; then
+    reply "${labels[$action]}"
+  else
+    if which notify-send >/dev/null; then
+      reply "$ERROR_LABEL" true
+      notify-send "bar block [$name]" "$err"
+    else
+      reply "${err}" true
+    fi
+  fi
+done
