@@ -1,5 +1,8 @@
 = Community contributed blocklets
 
+link:https://aur.archlinux.org/packages/i3blocks-contrib/[image:https://img.shields.io/aur/version/i3blocks-contrib?style=flat-square[AUR version]]
+link:https://aur.archlinux.org/packages/i3blocks-contrib-git/[image:https://img.shields.io/aur/version/i3blocks-contrib-git?label=aur-git&style=flat-square[AUR git version]]
+
 This repository contains a set of scripts (a.k.a. *blocklets*) for link:https://github.com/vivien/i3blocks[i3blocks], contributed by the community.
 
 |===
