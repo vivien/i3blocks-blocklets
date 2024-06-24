@@ -5,6 +5,13 @@ This is a C version of the cpu_usage blocklet.
 
 ![](cpu_usage2.png)
 
+# Usage
+Compile the `cpu_usage2` executable from `*.c` file.
+```
+cd /path/to/i3blocks/scripts/cpu_usage2
+make
+```
+
 # Config
 
 ```
