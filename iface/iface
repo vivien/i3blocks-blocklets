@@ -19,7 +19,9 @@
 
 # Use the provided interface, otherwise the device used for the default route.
 IF="${IFACE:-$BLOCK_INSTANCE}"
-IF="${IF:-$(ip route | awk '/^default/ { print $5 ; exit }')}"
+for version in 4 6; do
+	IF="${IF:-$(ip -$version route  | sed -n 's/^default.*dev \([^ ]*\).*/\1/p')}"
+done
 
 # Exit if there is no default route
 [[ -z "$IF" ]] && exit
@@ -32,7 +34,7 @@ IF="${IF:-$(ip route | awk '/^default/ { print $5 ; exit }')}"
 
 #------------------------------------------------------------------------
 
-AF=${ADDRESS_FAMILY:-inet6?}
+AF=${ADDRESS_FAMILY:-"inet6\?"}
 LABEL="${LABEL:-}"
 
 for flag in "$1" "$2"; do
@@ -57,8 +59,16 @@ if [[ "$IF" = "" ]] || [[ "$(cat /sys/class/net/$IF/operstate)" = 'down' ]]; the
   exit
 fi
 
-# if no interface is found, use the first device with a global scope
-IPADDR=$(ip addr show $IF | perl -n -e "/$AF ([^ \/]+).* scope global/ && print \$1 and exit")
+# Use the first global scope address that matches limitation and preffer not local one)
+while read -r ipaddr; do
+  case "$ipaddr" in
+    ""|169\.*|f*)
+      IPADDR="${IPADDR:-$ipaddr}"
+      continue # try another one
+  esac
+  IPADDR="$ipaddr"
+  break
+done <<<"$(ip addr show wlo1  | sed -n 's/.*inet6\? \([^/]\+\).* scope global.*/\1/p')"
 
 case $BLOCK_BUTTON in
   3) echo -n "$IPADDR" | xclip -q -se c ;;
