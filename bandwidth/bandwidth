@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Get custom IN and OUT labels if provided by command line arguments
+# NOTE, when using i3blocks, they are passed as env variables directly
 while [[ $# -gt 1 ]]; do
     key="$1"
     case "$key" in
@@ -30,8 +31,8 @@ while [[ $# -gt 1 ]]; do
     shift
 done
 
-[[ -z "$INLABEL" ]] && INLABEL="IN "
-[[ -z "$OUTLABEL" ]] && OUTLABEL="OUT "
+DEFAULT_INLABEL="IN "
+DEFAULT_OUTLABEL=" OUT "
 
 # Use the provided interface, otherwise the device used for the default route.
 if [[ -z $INTERFACE ]] && [[ -n $BLOCK_INSTANCE ]]; then
@@ -93,7 +94,7 @@ tx_rate=$(( $tx_diff / $time_diff ))
 # 1024^2 = 1048576, then display MiB/s instead
 
 # incoming
-echo -n "$INLABEL"
+echo -n "${INLABEL=$DEFAULT_INLABEL}"
 rx_kib=$(( $rx_rate >> 10 ))
 if hash bc 2>/dev/null && [[ "$rx_rate" -gt 1048576 ]]; then
   printf '%sM' "`echo "scale=1; $rx_kib / 1024" | bc`"
@@ -101,10 +102,8 @@ else
   echo -n "${rx_kib}K"
 fi
 
-echo -n " "
-
 # outgoing
-echo -n "$OUTLABEL"
+echo -n "${OUTLABEL=$DEFAULT_OUTLABEL}"
 tx_kib=$(( $tx_rate >> 10 ))
 if hash bc 2>/dev/null && [[ "$tx_rate" -gt 1048576 ]]; then
   printf '%sM\n' "`echo "scale=1; $tx_kib / 1024" | bc`"

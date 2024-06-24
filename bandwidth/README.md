@@ -14,6 +14,6 @@ command=$SCRIPT_DIR/bandwidth
 interval=5
 #INTERFACE=eth0
 #INLABEL=IN 
-#OUTLABEL=OUT 
+#OUTLABEL= OUT 
 #TREAT_UNKNOWN_AS_UP=0
 ```
