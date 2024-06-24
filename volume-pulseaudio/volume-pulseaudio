@@ -94,13 +94,20 @@ function move_sinks_to_new_default {
     done
 }
 
+function list_available_sinks {
+    # finding all sinks with at least one port not having available: no
+    pacmd list-sinks | grep -Poz "(^|\n).*index: (.|\n)+?(?=\n.*index|$)" \
+      | grep -Pz 'available: (?!no)' | sed 's/\x00//'
+}
+
 function set_default_playback_device_next {
     inc=${1:-1}
-    num_devices=$(pacmd list-sinks | grep -c index:)
     sink_arr=($(pacmd list-sinks | grep index: | grep -o '[0-9]\+'))
-    default_sink_index=$(( $(pacmd list-sinks | grep index: | grep -no '*' | grep -o '^[0-9]\+') - 1 ))
-    default_sink_index=$(( ($default_sink_index + $num_devices + $inc) % $num_devices ))
-    default_sink=${sink_arr[$default_sink_index]}
+    sink_arr=($(list_available_sinks | grep -Pzo '(?<=index: )[0-9]*\n'))
+    num_devices=${#sink_arr[@]}
+    default_sink_index=$(( $(list_available_sinks | grep index: | grep -no '*' | grep -o '^[0-9]\+') - 1 ))
+    default_sink_index_next=$(( ($default_sink_index + $num_devices + $inc) % $num_devices ))
+    default_sink=${sink_arr[$default_sink_index_next]}
     pacmd set-default-sink $default_sink
     move_sinks_to_new_default $default_sink
 }
