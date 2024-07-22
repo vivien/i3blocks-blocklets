@@ -1,16 +1,16 @@
-PREFIX = $(HOME)/.local/
+PREFIX = $(HOME)/.local
 
-_INSTALLDIR = $(DESTDIR)$(PREFIX)/libexec/i3blocks/
+_INSTALLDIR = $(PREFIX)/libexec/i3blocks
 
 _MAKEBLOCKS := $(dir $(wildcard */Makefile))
 all: build
 build: $(_MAKEBLOCKS)
 $(_MAKEBLOCKS):
-		$(MAKE) -C $@ 
+		$(MAKE) -C $@
 
 install: all do-install
 
-installdirs: 
+installdirs:
 		install -d $(_INSTALLDIR)
 
 _BLOCKS := $(shell find . -type f -executable -not -path './.*')

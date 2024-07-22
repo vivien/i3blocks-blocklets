@@ -8,9 +8,10 @@ LINK=$(CC)
 
 BUILD_DIR=build
 OBJ_DIR=$(BUILD_DIR)/obj
-BIN_DIR=bin
+# BIN_DIR=bin
+BIN_DIR=.
 
-LIBS := 
+LIBS :=
 DEFS := -DVERSION=\"0.1\"
 WARN_LEVEL = -Wall -Wextra -pedantic
 
@@ -34,7 +35,7 @@ OBJECTS += $(SRC_A:%.s=$(OBJ_DIR)/%.o)
 all: directories $(PRG)
 
 $(PRG): $(BIN_DIR)/$(PRG)
-	
+
 $(OBJ_DIR)/%.o: %.s
 	@mkdir -p $(@D)
 	$(AS) $(INCLUDES) $(MMCU) -g -o $@ $^
