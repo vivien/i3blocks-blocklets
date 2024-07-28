@@ -131,8 +131,8 @@ int main(int argc, char *argv[])
   char *envvar = NULL;
   char *label = "";
 
-  char *prefixes_SI[] = { "", "K", "M", "G", 0 };
-  char *prefixes_BI[]  = { "", "Ki", "Mi", "Gi", 0 };
+  char *prefixes_SI[] = { " ",  "K",  "M",  "G",  0 };
+  char *prefixes_BI[] = { "  ", "Ki", "Mi", "Gi", 0 };
   char **prefixes = prefixes_BI;
 
   envvar = getenv("USE_BITS");
