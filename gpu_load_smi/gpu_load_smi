@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+# Author: Syed Isam Hashmi
+# 2024-07-30
+
+gpuIdx="${GPU_IDX}"
+
+while read -r line; do
+  firstChar="${line:0:1}"
+
+  # First couple lines and occasional lines of
+  # the NVIDIA-SMI output are headers that start with '#'
+  #
+  # In addition, ignore lines that arent related to this GPU device.
+  if [ "$firstChar" == "#" ] || [ "$firstChar" != "$gpuIdx" ];
+  then
+    continue; 
+  else
+    # I commented out unused variables 
+    #
+    # Uncomment and use these lines as you wish.
+    line=($line)
+    # gpuId=${line[0]} 
+    # pwrW=${line[1]}
+    gTemp=${line[2]}
+    # mTemp=${line[3]}
+    sm=${line[4]}
+    mem=${line[5]}
+    # enc=${line[6]}
+    # dec=${line[7]}
+    # jpg=${line[8]}
+    # ofa=${line[9]}
+    # mclk=${line[10]}
+    # pclk=${line[11]}
+
+    # Customize to your heart's content
+    echo "$gTemp°C SM%: $sm% MEM: $mem%"
+    exit
+  fi
+done < <(nvidia-smi dmon -d 1)
+wait
+
