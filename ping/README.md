@@ -11,6 +11,7 @@ configured `ping_target` target host, or the `8.8.8.8` default target.
 
 - `python3`
 - `ping`
+- `fonts-noto-color-emoji`
 
 # Config
 ## Output with pango markup available
