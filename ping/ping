@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+#
+# Copyright (C) 2024 Gregory David <dev@groolot.net>
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import os
+import subprocess
+import sys
+
+CONFIG: dict = dict(os.environ)
+LABEL: str = CONFIG.get("label", "")
+PANGO_MARKUP: bool = CONFIG.get("markup", "") == "pango"
+PING_TARGET: str = CONFIG.get("ping_target", "8.8.8.8")
+DEFAULT_COLOR: str = CONFIG.get("color", "#ffffff")
+COLOR_ERROR: str = CONFIG.get("color_error", "#ff0000")
+
+
+def print_format(
+    long_text: str,
+    short_text: str,
+    color: str = DEFAULT_COLOR,
+    pango: bool = PANGO_MARKUP,
+):
+    if pango:
+        print(f"<span color='{color}'>{': ' if LABEL else ''}{long_text}</span>")
+        print(f"<span color='{color}'>{short_text}</span>")
+    else:
+        print(f"{': ' if LABEL else ''}{long_text}")
+        print(short_text)
+        print(color)
+
+
+def ping_block():
+    try:
+        ping_command = "ping"
+        subprocess.run(
+            [ping_command, "-n", "-w", "1", "-c", "1", PING_TARGET],
+            universal_newlines=True,
+            check=True,
+            capture_output=True,
+        )
+        print_format(long_text="🟢", short_text="🟢")
+        return 0
+    except FileNotFoundError:
+        print_format(
+            long_text=f"{ping_command} command not found",
+            short_text=" ",
+        )
+        return 33
+    except subprocess.CalledProcessError:
+        print_format(
+            long_text="🔴 unreachable",
+            short_text="🔴",
+            color=COLOR_ERROR,
+        )
+        return 0
+
+
+if __name__ == "__main__":
+    sys.exit(ping_block())
