@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+get_power_state() {
+  powerprofilesctl | grep '*' | awk '{ print $2 }' | sed 's/: *//'
+}
+
+toggle_power_state() {
+  current_state=$(get_power_state)
+
+  if [ "$current_state" == "power-saver" ]; then
+    powerprofilesctl set performance
+  elif [ "$current_state" == "balanced" ]; then
+    powerprofilesctl set power-saver
+  else
+    powerprofilesctl set balanced
+  fi
+}
+
+if [[ "$BLOCK_BUTTON" ]]; then
+  case "$BLOCK_BUTTON" in
+    1) toggle_power_state;;
+  esac
+fi
+
+echo "$(get_power_state)"
