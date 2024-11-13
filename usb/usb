@@ -98,17 +98,20 @@ def pangoEscape(text):
 
 
 def getLeafDevicePaths():
-    lines = check_output(['lsblk', '-lpno', 'NAME'], universal_newlines=True)
+    # lines = check_output(['lsblk', '-lpno', 'NAME'], universal_newlines=True)
+    lines = check_output(['lsblk', '--tree=RA', '-spndo', 'NAME'], universal_newlines=True)
     lines = lines.split("\n")
     lines = filter(lambda s: s[:4]=='/dev', lines)
     lines = map(lambda s: s.split(' ')[0], lines)
-    lines = filter(None, lines)
+    lines = list(set(filter(None, lines)))
     return lines
 
 
 def getKernelName(path):
-    return check_output(['lsblk', '-lndo', 'KNAME', path],
-            universal_newlines=True).rstrip("\n")
+    # return check_output(['lsblk', '-lndo', 'KNAME', path],
+    #        universal_newlines=True).rstrip("\n")
+    return check_output(['lsblk', '-ndso', 'KNAME', path],
+            universal_newlines=True).rstrip("\n").split("\n")[-1]
 
 
 def getDeviceType(path):
@@ -386,7 +389,7 @@ def setParsedArgs(args):
 
 
 parseArguments()
-leaves = getLeafDevicePaths()
+leaves = sorted(getLeafDevicePaths())
 leaves = [path for path in leaves if not fastIgnore(path)]
 attributeMaps = getAttributeMaps(leaves)
 leaves = (path for path in leaves if not ignore(path, attributeMaps[path]))
@@ -395,4 +398,4 @@ output = SEPARATOR.join(outputs)
 if output:
     output = "<span color='{}'>{}</span>".format(INFO_TEXT_COLOR, output)
 print(output)
-print(output)
+
