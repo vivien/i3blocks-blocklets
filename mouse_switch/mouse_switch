@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Colors to display
+COLOR0=${CMD0COLOR:-#888888}
+COLOR1=${CMD1COLOR:-#FF0000}
+COLOR2=${CMD2COLOR:-#00FF00}
+COLOR3=${CMD3COLOR:-#0000FF}
+# Exact string to display
+CMD0IND="<span foreground=\"$COLOR0\">$CMD0IND</span>"
+CMD1IND="<span foreground=\"$COLOR1\">$CMD1IND</span>"
+CMD2IND="<span foreground=\"$COLOR2\">$CMD2IND</span>"
+CMD3IND="<span foreground=\"$COLOR3\">$CMD3IND</span>"
+
+LASTCMD=$CMD0IND
+if [ "$BLOCK_BUTTON" == '1' ]
+then
+  $CMD1 >> /dev/null 2>&1
+  LASTCMD=$CMD1IND
+fi
+
+if [ "$BLOCK_BUTTON" == '2' ]
+then
+  $CMD2 >> /dev/null 2>&1
+  LASTCMD=$CMD2IND
+fi
+
+if [ "$BLOCK_BUTTON" == '3' ]
+then
+  $CMD3 >> /dev/null 2>&1
+  LASTCMD=$CMD3IND
+fi
+echo "$LASTCMD"

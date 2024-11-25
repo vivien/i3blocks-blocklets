@@ -36,6 +36,7 @@ This repository contains a set of scripts (a.k.a. *blocklets*) for link:https://
 | link:load_average[] | Show the system 1 minute load average
 | link:mediaplayer[] | Generic media player status/controls using playerctl
 | link:memory[] | Show ram or swap usage
+| link:mouse_switch[] | Execute commands with a mouse click
 | link:monitor_manager[] | Manage monitor on/off, resolution, extend, clone
 | link:nm-vpn[] | Show vpn status using network manager
 | link:openvpn[] | Show openvpn status
