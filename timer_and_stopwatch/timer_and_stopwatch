@@ -5,6 +5,7 @@ TIMER_LABEL=${TIMER_LABEL:-timer}
 DEFAULT_MODE=${DEFAULT_MODE:-timer}
 DEFAULT_STOPWATCH=${DEFAULT_STOPWATCH:-0}
 DEFAULT_TIMER=${DEFAULT_TIMER:-60}
+DEFAULT_INCREMENT=${DEFAULT_INCREMENT:-1}
 PLAY_LABEL=${PLAY_LABEL:-(playing)}
 PAUSE_LABEL=${PAUSE_LABEL:-(paused)}
 TIMER_LOOP=${TIMER_LOOP:-false}
@@ -120,12 +121,12 @@ case $BLOCK_BUTTON in
     ;;
   4 )
     $running && pause
-    initial_time=$(( initial_time + 1 ))
+    initial_time=$(( initial_time + ${DEFAULT_INCREMENT} ))
     time=$initial_time
     ;;
   5 )
     $running && pause
-    initial_time=$(( initial_time - 1 ))
+    initial_time=$(( initial_time - ${DEFAULT_INCREMENT} ))
     time=$initial_time
     ;;
 esac
