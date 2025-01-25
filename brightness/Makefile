@@ -10,13 +10,13 @@ BUILD_DIR=build
 OBJ_DIR=$(BUILD_DIR)/obj
 BIN_DIR=bin
 
-LIBS := 
+LIBS := -ludev
 DEFS := -DVERSION=\"0.1\"
 WARN_LEVEL = -Wall -Wextra -pedantic
 
 PRG = brightness
 INCLUDES := -Iinc
-CFLAGS := $(INCLUDES) $(DEFS) $(WARN_LEVEL) -pipe -O0 -g3 -std=c11
+CFLAGS := $(INCLUDES) $(DEFS) $(WARN_LEVEL) -pipe -O0 -g3
 
 debug: CFLAGS += -O0 -g3
 debug: all
