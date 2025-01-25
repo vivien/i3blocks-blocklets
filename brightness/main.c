@@ -1,17 +1,18 @@
-#include <string.h>
+#include <assert.h>
+#include <dirent.h>
+#include <fcntl.h>
+#include <getopt.h>
+#include <libudev.h>
+#include <poll.h>
+#include <stdarg.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/poll.h>
+#include <time.h>
 #include <unistd.h>
-#include <signal.h>
-#include <stdbool.h>
-#include <dirent.h>
-#include <stdint.h>
-#include <errno.h>
-#include <assert.h>
-#include <stdarg.h>
-#include <getopt.h>
-#include <sys/select.h>
-#include <sys/inotify.h>
 
 #define INOTIFY_EVENT_SIZE (sizeof (struct inotify_event))
 #define INOTIFY_BUFF_SIZE 64
@@ -43,14 +44,8 @@ main(int argc, char *argv[]) {
   char *actual_brightness_path = default_abp;
   char *max_brightness_path = default_mbp;
 
-  char buff[INOTIFY_BUFF_SIZE] = {0};
-  fd_set read_descriptors;
-  struct timeval time_to_wait;
-  int  ifd, wd, read_len, rc, opt_idx;
+  int  opt_idx;
   size_t opt_len;
-  // ifd - inotify_file_descriptor
-  // wd - inotify wait descriptor
-  // rc - result code
 
   static const struct option lopts[] = {
   {"actual_brightness_path", required_argument,  NULL, 'a'},
@@ -87,57 +82,66 @@ main(int argc, char *argv[]) {
   print_brightness_percent(actual_brightness_path,
                            max_brightness_path);
 
-  ifd = inotify_init();
-  if (ifd == -1) {
-    perror("inotify init failed");
-    return -1;
+  struct udev *udev = udev_new();
+  if (!udev) {
+    fprintf(stderr, "creating udev object\n");
+    return EXIT_FAILURE;
   }
 
-  wd = inotify_add_watch(ifd, actual_brightness_path, IN_MODIFY);
-  FD_ZERO (&read_descriptors);
-  FD_SET (ifd, &read_descriptors);
-  time_to_wait.tv_sec = 10;
-  time_to_wait.tv_usec = 0;
+  struct udev_monitor *mon = udev_monitor_new_from_netlink(udev, "udev");
+  if (!mon) {
+    fprintf(stderr, "creating udev monitor\n");
+    return EXIT_FAILURE;
+  }
+
+  if (udev_monitor_filter_add_match_subsystem_devtype(mon, "backlight", NULL) < 0) {
+    fprintf(stderr, "adding filter to udev monitor\n");
+    udev_monitor_unref(mon);
+    udev_unref(udev);
+    return EXIT_FAILURE;
+  }
+
+  if (udev_monitor_filter_update(mon) < 0) {
+    fprintf(stderr, "updating udev monitor filter\n");
+    return EXIT_FAILURE;
+  }
+
+  int monfd = udev_monitor_get_fd(mon);
+  if (monfd < 0) {
+    fprintf(stderr, "getting udev monitor fd\n");
+    return EXIT_FAILURE;
+  }
+
+  struct pollfd fds[1];
+  fds[0].fd = monfd;
+  fds[0].events = POLLIN;
 
   while (1) {
-    fd_set tmp_set = read_descriptors;
-    rc = select(ifd+1, &tmp_set, NULL, NULL, &time_to_wait);
-    if (rc < 0) {
-      perror("select failed");
+    int ret = poll(fds, 1, -1);
+    if (ret < 0) {
+      perror("poll failed");
       break;
     }
 
-    if (rc == 0) { //timeout
-      continue;
-    }
+    if (fds[0].revents & POLLIN) {
+      struct udev_device *dev = udev_monitor_receive_device(mon);
+      if (dev) {
+        const char *action = udev_device_get_action(dev);
 
-    if (!FD_ISSET(ifd, &read_descriptors)) {
-      continue;
-    }
-
-    read_len = read(ifd, (void*)buff, INOTIFY_BUFF_SIZE);
-    if (read_len < 0) {
-      perror("read failed");
-      continue;
-    }
-
-    for (int eix = 0; eix < read_len; ) {
-      struct inotify_event *event = (struct inotify_event*) &buff[eix];
-      eix += INOTIFY_EVENT_SIZE + event->len;
-      if (!(event->mask & IN_MODIFY)) {
-        continue;
+        if (strncmp(action, "change", 6) == 0) {
+          print_brightness_percent(actual_brightness_path,
+                                   max_brightness_path);
+        }
+        udev_device_unref(dev);
       }
-
-      print_brightness_percent(actual_brightness_path,
-                               max_brightness_path);
     }
   }
 
+  udev_monitor_unref(mon);
+  udev_unref(udev);
+
   //actually when we receive some signal (like sigterm or something like that)
   //we will be here.
-
-  inotify_rm_watch(ifd, wd);
-  close(ifd);
 
   if (actual_brightness_path != default_abp)
     free(actual_brightness_path);
