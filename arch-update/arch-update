@@ -51,6 +51,14 @@ def create_argparse():
         help='Include AUR packages. Attn: Yay must be installed'
     )
     parser.add_argument(
+        '-p',
+        '--aur_paru',
+        action = 'store_const',
+        const = True,
+        default = _default('AUR_PARU', 'False', strbool),
+        help='Include AUR packages. Attn: Paru must be installed'
+    )
+    parser.add_argument(
         '-q',
         '--quiet',
         action = 'store_const',
@@ -115,6 +123,14 @@ def get_aur_yay_updates():
 
     return aur_updates
 
+def get_aur_paru_updates():
+    output = check_output(['paru', '-Qua']).decode('utf-8')
+    if not output:
+        return []
+
+    aur_updates = [line.split(' ')[0] for line in output.split('\n') if line]
+
+    return aur_updates
 
 def matching_updates(updates, watch_list):
     matches = set()
@@ -135,6 +151,8 @@ if args.aur:
     updates += get_aur_yaourt_updates()
 elif args.aur_yay:
     updates += get_aur_yay_updates()
+elif args.aur_paru:
+    updates += get_aur_paru_updates()
 
 update_count = len(updates)
 if update_count > 0:
