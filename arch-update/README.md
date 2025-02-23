@@ -40,7 +40,10 @@ QUIET=true
 WATCH=^linux.* ^pacman.*
 BASE_COLOR=#5fff5f
 UPDATE_COLOR=#FFFF85
+# Should only have one AUR method at a time
 AUR=true
+#AUR_YAY=true
+#AUR_PARU=true
 LABEL= 
 ```
 # Configuration
@@ -51,4 +54,6 @@ _Use the environment variables above instead of these deprecated command line op
 - `-b`/`--base_color`: set the base color of the output (when your system is up to date)
 - `-u`/`--updates_available_color`: set the color of the output when updates are available
 - `-a`/`--aur`: activate AUR update support  
+- `-y`/`--aur_yay`: activate AUR update support using yay
+- `-p`/`--aur_paru`: activate AUR update support using paru
 For the latest options call `$SCRIPT_DIR/arch-update -h`.
