@@ -11,7 +11,6 @@ This is similar to the rofi-calendar blocklet, but without the rofi dependency a
 # Dependencies
 
 * yad
-* xdotool (for positioning of the popup)
 
 # Installation
 
